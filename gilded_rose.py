@@ -63,7 +63,7 @@ class GildedRose(object):
                     if not is_backstage_pass(item):
                         if item.quality > 0:
                             if not is_sulfuras(item):
-                                item.quality = item.quality - 1
+                                decrease_quality(item)
                     if is_backstage_pass(item):
                         item.quality = 0
                 else:
