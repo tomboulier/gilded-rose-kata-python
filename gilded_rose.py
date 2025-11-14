@@ -37,6 +37,12 @@ def decrease_quality(item: Item, amount: int = 1) -> None:
     # for other items, decrease quality down to a min of 0
     item.quality = max(0, item.quality - amount)
     
+def drop_quality_to_zero(item: Item) -> None:
+    if is_sulfuras(item):
+        # Sulfuras quality does not change
+        return
+    item.quality = 0
+    
 def decrease_sell_in(item: Item, amount: int = 1) -> None:
     item.sell_in -= amount
 
@@ -63,6 +69,6 @@ class GildedRose(object):
                     if not is_backstage_pass(item):
                         decrease_quality(item)
                     if is_backstage_pass(item):
-                        item.quality = 0
+                        drop_quality_to_zero(item)
                 else:
                     increase_quality(item)
