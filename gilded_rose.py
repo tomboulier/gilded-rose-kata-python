@@ -50,8 +50,7 @@ class GildedRose(object):
             if is_normal(item):
                 decrease_quality(item)
             else:
-                if item.quality < 50:
-                    item.quality = item.quality + 1
+                increase_quality(item)
                 if is_backstage_pass(item):
                     if item.sell_in < 11:
                         increase_quality(item)
