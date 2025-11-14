@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 
+def is_aged_brie(item):
+    return item.name == "Aged Brie"
+
+def is_backstage_pass(item):
+    return item.name == "Backstage passes to a TAFKAL80ETC concert"
+
+def is_sulfuras(item):
+    return item.name == "Sulfuras, Hand of Ragnaros"
+
 class GildedRose(object):
 
     def __init__(self, items):
@@ -7,7 +16,7 @@ class GildedRose(object):
 
     def update_quality(self):
         for item in self.items:
-            if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
+            if not is_aged_brie(item) and not is_backstage_pass(item):
                 if item.quality > 0:
                     if item.name != "Sulfuras, Hand of Ragnaros":
                         item.quality = item.quality - 1
