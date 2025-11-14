@@ -46,10 +46,10 @@ class GildedRose(object):
             if not is_sulfuras(item):
                 item.sell_in = item.sell_in - 1
             if item.sell_in < 0:
-                if item.name != "Aged Brie":
-                    if item.name != "Backstage passes to a TAFKAL80ETC concert":
+                if not is_aged_brie(item):
+                    if not is_backstage_pass(item):
                         if item.quality > 0:
-                            if item.name != "Sulfuras, Hand of Ragnaros":
+                            if not is_sulfuras(item):
                                 item.quality = item.quality - 1
                     if is_backstage_pass(item):
                         item.quality = 0
