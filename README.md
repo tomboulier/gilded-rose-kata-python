@@ -1,5 +1,8 @@
 # Gilded Rose starting position in Python
 
+This is the starting position for the Gilded Rose refactoring kata in Python,
+taken from the [Gilded Rose Kata](https://github.com/emilybache/GildedRose-Refactoring-Kata) by Emily Bache.
+
 For exercise instructions see [top level README](../README.md)
 
 Suggestion: create a python virtual environment for this project. See the [documentation](https://docs.python.org/3/library/venv.html)
