@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from abc import ABC, abstractmethod
+from __future__ import annotations
+
+from typing import Callable, Dict, ClassVar
+
 
 class Item:
     def __init__(self, name, sell_in, quality):
@@ -9,102 +12,118 @@ class Item:
 
     def __repr__(self):
         return "%s, %s, %s" % (self.name, self.sell_in, self.quality)
-    
-def is_aged_brie(item: Item) -> bool:
-    return item.name == "Aged Brie"
 
-def is_backstage_pass(item: Item) -> bool:
-    return item.name == "Backstage passes to a TAFKAL80ETC concert"
 
-def is_sulfuras(item: Item) -> bool:
-    return item.name == "Sulfuras, Hand of Ragnaros"
-    
-def is_normal(item: Item) -> bool:
-    return not (
-        is_aged_brie(item) or is_backstage_pass(item) or is_sulfuras(item)
-    )
-    
-def increase_quality(item: Item, amount: int = 1) -> None:
-    if is_sulfuras(item):
-        # Sulfuras quality does not change
-        return
-    # for other items, increase quality up to a max of 50
-    item.quality = min(50, item.quality + amount)
-    
-def decrease_quality(item: Item, amount: int = 1) -> None:
-    if is_sulfuras(item):
-        # Sulfuras quality does not change
-        return
-    # for other items, decrease quality down to a min of 0
-    item.quality = max(0, item.quality - amount)
-    
-def drop_quality_to_zero(item: Item) -> None:
-    if is_sulfuras(item):
-        # Sulfuras quality does not change
-        return
-    item.quality = 0
-    
-def decrease_sell_in(item: Item) -> None:
-    if is_sulfuras(item):
-        # Sulfuras does not have an end date
-        return
-    item.sell_in -= 1
-    
-class UpdateStrategy(ABC):
-    """Strategy interface for updating an item's quality and sell_in."""
+# Type alias for update functions
+UpdateFn = Callable[[Item], None]
 
-    @abstractmethod
-    def update(self, item: Item) -> None:
-        """Update the given item."""
-        raise NotImplementedError
 
-class NormalUpdateStrategy(UpdateStrategy):
-    def update(self, item: Item) -> None:
-        decrease_quality(item)
-        decrease_sell_in(item)
-        if item.sell_in < 0:
-            decrease_quality(item)
+class UpdateStrategy:
+    """Registry of update functions for Gilded Rose items.
 
-class AgedBrieUpdateStrategy(UpdateStrategy):
-    def update(self, item: Item) -> None:
-        increase_quality(item)
-        decrease_sell_in(item)
-        if item.sell_in < 0:
-            increase_quality(item)
+    A single class manages:
+    - a `registry` mapping item names → update function
+    - helpers as static methods
+    - the default update behavior for normal items
+    """
 
-class BackstagePassUpdateStrategy(UpdateStrategy):
-    def update(self, item: Item) -> None:
-        increase_quality(item)
-        if item.sell_in < 11:
-            increase_quality(item)
-        if item.sell_in < 6:
-            increase_quality(item)
-        decrease_sell_in(item)
-        if item.sell_in < 0:
-            drop_quality_to_zero(item)
+    # --------------------------
+    # Registry
+    # --------------------------
+    registry: ClassVar[Dict[str, UpdateFn]] = {}
 
-class SulfurasUpdateStrategy(UpdateStrategy):
-    def update(self, item: Item) -> None:
-        # Sulfuras quality does not change
-        pass
-    
-class StrategyFactory:
+    @classmethod
+    def register(cls, item_name: str) -> Callable[[UpdateFn], UpdateFn]:
+        """Decorator to register an update function for a given item name."""
+        def decorator(func: UpdateFn) -> UpdateFn:
+            cls.registry[item_name] = func
+            return func
+        return decorator
+
+    @classmethod
+    def get(cls, item: Item) -> UpdateFn:
+        """Return the update function for this item, or fallback to normal behavior."""
+        return cls.registry.get(item.name, cls.update_normal)
+
+    # --------------------------
+    # Helpers (static methods)
+    # --------------------------
+
     @staticmethod
-    def get(item):
-        if is_aged_brie(item):
-            return AgedBrieUpdateStrategy()
-        if is_backstage_pass(item):
-            return BackstagePassUpdateStrategy()
-        if is_sulfuras(item):
-            return SulfurasUpdateStrategy()
-        return NormalUpdateStrategy()
+    def increase_quality(item: Item, amount: int = 1) -> None:
+        """Increase quality up to a maximum of 50."""
+        item.quality = min(50, item.quality + amount)
 
-class GildedRose(object):
+    @staticmethod
+    def decrease_quality(item: Item, amount: int = 1) -> None:
+        """Decrease quality down to a minimum of 0."""
+        item.quality = max(0, item.quality - amount)
 
-    def __init__(self, items):
+    @staticmethod
+    def drop_quality_to_zero(item: Item) -> None:
+        """Set quality to zero."""
+        item.quality = 0
+
+    @staticmethod
+    def decrease_sell_in(item: Item) -> None:
+        """Decrease sell_in by 1."""
+        item.sell_in -= 1
+
+    # --------------------------
+    # Default strategy
+    # --------------------------
+
+    @staticmethod
+    def update_normal(item: Item) -> None:
+        """Default update logic for normal items."""
+        UpdateStrategy.decrease_quality(item)
+        UpdateStrategy.decrease_sell_in(item)
+        if item.sell_in < 0:
+            UpdateStrategy.decrease_quality(item)
+
+
+# --------------------------
+# Registered strategies
+# --------------------------
+
+@UpdateStrategy.register("Aged Brie")
+def update_aged_brie(item: Item) -> None:
+    UpdateStrategy.increase_quality(item)
+    UpdateStrategy.decrease_sell_in(item)
+    if item.sell_in < 0:
+        UpdateStrategy.increase_quality(item)
+
+
+@UpdateStrategy.register("Backstage passes to a TAFKAL80ETC concert")
+def update_backstage(item: Item) -> None:
+    UpdateStrategy.increase_quality(item)
+    if item.sell_in < 11:
+        UpdateStrategy.increase_quality(item)
+    if item.sell_in < 6:
+        UpdateStrategy.increase_quality(item)
+
+    UpdateStrategy.decrease_sell_in(item)
+
+    if item.sell_in < 0:
+        UpdateStrategy.drop_quality_to_zero(item)
+
+
+@UpdateStrategy.register("Sulfuras, Hand of Ragnaros")
+def update_sulfuras(item: Item) -> None:
+    # Legendary item: no change.
+    pass
+
+
+# --------------------------
+# Main class
+# --------------------------
+
+class GildedRose:
+    """Core class applying update strategies to items."""
+
+    def __init__(self, items: list[Item]):
         self.items = items
 
-    def update_quality(self):
+    def update_quality(self) -> None:
         for item in self.items:
-            strategy = StrategyFactory.get(item)
-            strategy.update(item)
+            UpdateStrategy.get(item)(item)
