@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from abc import ABC, abstractmethod
 
 class Item:
     def __init__(self, name, sell_in, quality):
@@ -48,6 +49,55 @@ def decrease_sell_in(item: Item) -> None:
         # Sulfuras does not have an end date
         return
     item.sell_in -= 1
+    
+class UpdateStrategy(ABC):
+    """Strategy interface for updating an item's quality and sell_in."""
+
+    @abstractmethod
+    def update(self, item: Item) -> None:
+        """Update the given item."""
+        raise NotImplementedError
+
+class NormalUpdateStrategy(UpdateStrategy):
+    def update(self, item: Item) -> None:
+        decrease_quality(item)
+        decrease_sell_in(item)
+        if item.sell_in < 0:
+            decrease_quality(item)
+
+class AgedBrieUpdateStrategy(UpdateStrategy):
+    def update(self, item: Item) -> None:
+        increase_quality(item)
+        decrease_sell_in(item)
+        if item.sell_in < 0:
+            increase_quality(item)
+
+class BackstagePassUpdateStrategy(UpdateStrategy):
+    def update(self, item: Item) -> None:
+        increase_quality(item)
+        if item.sell_in < 11:
+            increase_quality(item)
+        if item.sell_in < 6:
+            increase_quality(item)
+        decrease_sell_in(item)
+        if item.sell_in < 0:
+            drop_quality_to_zero(item)
+
+class SulfurasUpdateStrategy(UpdateStrategy):
+    def update(self, item: Item) -> None:
+        # Sulfuras quality does not change
+        pass
+    
+class StrategyFactory:
+    @staticmethod
+    def get(item):
+        if is_aged_brie(item):
+            return AgedBrieUpdateStrategy()
+        if is_backstage_pass(item):
+            return BackstagePassUpdateStrategy()
+        if is_sulfuras(item):
+            return SulfurasUpdateStrategy()
+        return NormalUpdateStrategy()
 
 class GildedRose(object):
 
@@ -56,20 +106,5 @@ class GildedRose(object):
 
     def update_quality(self):
         for item in self.items:
-            if is_normal(item):
-                decrease_quality(item)
-            else:
-                increase_quality(item)
-                if is_backstage_pass(item):
-                    if item.sell_in < 11:
-                        increase_quality(item)
-                    if item.sell_in < 6:
-                        increase_quality(item)
-            decrease_sell_in(item)
-            if item.sell_in < 0:
-                if is_aged_brie(item):
-                    increase_quality(item)
-                elif is_backstage_pass(item):
-                    drop_quality_to_zero(item)
-                else:
-                    decrease_quality(item)
+            strategy = StrategyFactory.get(item)
+            strategy.update(item)
