@@ -24,9 +24,17 @@ def is_normal(item: Item) -> bool:
     )
     
 def increase_quality(item: Item, amount: int = 1) -> None:
+    if is_sulfuras(item):
+        # Sulfuras quality does not change
+        return
+    # for other items, increase quality up to a max of 50
     item.quality = min(50, item.quality + amount)
     
 def decrease_quality(item: Item, amount: int = 1) -> None:
+    if is_sulfuras(item):
+        # Sulfuras quality does not change
+        return
+    # for other items, decrease quality down to a min of 0
     item.quality = max(0, item.quality - amount)
     
 def decrease_sell_in(item: Item, amount: int = 1) -> None:
