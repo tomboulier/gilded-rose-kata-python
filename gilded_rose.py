@@ -61,9 +61,7 @@ class GildedRose(object):
             if item.sell_in < 0:
                 if not is_aged_brie(item):
                     if not is_backstage_pass(item):
-                        if item.quality > 0:
-                            if not is_sulfuras(item):
-                                decrease_quality(item)
+                        decrease_quality(item)
                     if is_backstage_pass(item):
                         item.quality = 0
                 else:
