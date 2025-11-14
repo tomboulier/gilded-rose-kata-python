@@ -22,6 +22,15 @@ def is_normal(item: Item) -> bool:
     return not (
         is_aged_brie(item) or is_backstage_pass(item) or is_sulfuras(item)
     )
+    
+def increase_quality(item: Item, amount: int = 1) -> None:
+    item.quality = min(50, item.quality + amount)
+    
+def decrease_quality(item: Item, amount: int = 1) -> None:
+    item.quality = max(0, item.quality - amount)
+    
+def decrease_sell_in(item: Item, amount: int = 1) -> None:
+    item.sell_in -= amount
 
 class GildedRose(object):
 
@@ -31,8 +40,7 @@ class GildedRose(object):
     def update_quality(self):
         for item in self.items:
             if is_normal(item):
-                if item.quality > 0:
-                        item.quality = item.quality - 1
+                decrease_quality(item)
             else:
                 if item.quality < 50:
                     item.quality = item.quality + 1
