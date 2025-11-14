@@ -1,13 +1,27 @@
 # -*- coding: utf-8 -*-
 
-def is_aged_brie(item):
+class Item:
+    def __init__(self, name, sell_in, quality):
+        self.name = name
+        self.sell_in = sell_in
+        self.quality = quality
+
+    def __repr__(self):
+        return "%s, %s, %s" % (self.name, self.sell_in, self.quality)
+    
+def is_aged_brie(item: Item) -> bool:
     return item.name == "Aged Brie"
 
-def is_backstage_pass(item):
+def is_backstage_pass(item: Item) -> bool:
     return item.name == "Backstage passes to a TAFKAL80ETC concert"
 
-def is_sulfuras(item):
+def is_sulfuras(item: Item) -> bool:
     return item.name == "Sulfuras, Hand of Ragnaros"
+    
+def is_normal(item: Item) -> bool:
+    return not (
+        is_aged_brie(item) or is_backstage_pass(item) or is_sulfuras(item)
+    )
 
 class GildedRose(object):
 
@@ -16,9 +30,8 @@ class GildedRose(object):
 
     def update_quality(self):
         for item in self.items:
-            if not is_aged_brie(item) and not is_backstage_pass(item):
+            if is_normal(item):
                 if item.quality > 0:
-                    if item.name != "Sulfuras, Hand of Ragnaros":
                         item.quality = item.quality - 1
             else:
                 if item.quality < 50:
@@ -43,13 +56,3 @@ class GildedRose(object):
                 else:
                     if item.quality < 50:
                         item.quality = item.quality + 1
-
-
-class Item:
-    def __init__(self, name, sell_in, quality):
-        self.name = name
-        self.sell_in = sell_in
-        self.quality = quality
-
-    def __repr__(self):
-        return "%s, %s, %s" % (self.name, self.sell_in, self.quality)
