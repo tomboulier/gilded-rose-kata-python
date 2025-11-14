@@ -44,11 +44,11 @@ class GildedRose(object):
             else:
                 if item.quality < 50:
                     item.quality = item.quality + 1
-                    if is_backstage_pass(item):
-                        if item.sell_in < 11:
-                            increase_quality(item)
-                        if item.sell_in < 6:
-                            increase_quality(item)
+                if is_backstage_pass(item):
+                    if item.sell_in < 11:
+                        increase_quality(item)
+                    if item.sell_in < 6:
+                        increase_quality(item)
             if not is_sulfuras(item):
                 decrease_sell_in(item)
             if item.sell_in < 0:
