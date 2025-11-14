@@ -43,8 +43,11 @@ def drop_quality_to_zero(item: Item) -> None:
         return
     item.quality = 0
     
-def decrease_sell_in(item: Item, amount: int = 1) -> None:
-    item.sell_in -= amount
+def decrease_sell_in(item: Item) -> None:
+    if is_sulfuras(item):
+        # Sulfuras does not have an end date
+        return
+    item.sell_in -= 1
 
 class GildedRose(object):
 
@@ -62,8 +65,7 @@ class GildedRose(object):
                         increase_quality(item)
                     if item.sell_in < 6:
                         increase_quality(item)
-            if not is_sulfuras(item):
-                decrease_sell_in(item)
+            decrease_sell_in(item)
             if item.sell_in < 0:
                 if is_aged_brie(item):
                     increase_quality(item)
